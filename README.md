@@ -417,11 +417,11 @@ npm run test:coverage
 
 ### Releasing
 
-Releases are published to npm by the `Release` workflow when a GitHub release is published:
+Releases are automated with [release-please](https://github.com/googleapis/release-please) and follow [Conventional Commits](https://www.conventionalcommits.org/):
 
-1. Update `version` in `package.json` (and `package-lock.json` with `npm install`) and merge it to `main`.
-2. Create a GitHub release with a tag that matches the version, for example `v0.2.0`.
-3. The workflow checks that the tag matches `package.json`, builds, runs the tests and publishes. Pre-release versions such as `v0.2.0-beta.1` are published under the `next` dist-tag.
+1. Every merge to `main` updates a release pull request that bumps `version` in `package.json` and adds the new entries to [`CHANGELOG.md`](CHANGELOG.md). While the version is `0.x`, `fix:` bumps the patch version and `feat:` or a breaking change bumps the minor version.
+2. Merging the release pull request creates the tag (for example `v0.2.0`) and the GitHub release.
+3. The `Release` workflow then checks that the tag matches `package.json`, builds, runs the tests and publishes to npm. Pre-release versions such as `v0.2.0-beta.1` are published under the `next` dist-tag. A version that is already on npm is skipped.
 
 Publishing uses [npm trusted publishing](https://docs.npmjs.com/trusted-publishers), so no npm token is stored in the repository, and every release includes a [provenance attestation](https://docs.npmjs.com/generating-provenance-statements).
 
