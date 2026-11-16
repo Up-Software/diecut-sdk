@@ -1,0 +1,49 @@
+{
+  "name": "@up-software/diecut-sdk",
+  "version": "0.1.0",
+  "description": "Unofficial Node.js/TypeScript SDK for the diecuttemplates.com APIs: Dielines API and Dieline Dimensions API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Up-Software/diecut-sdk.git"
+  },
+  "homepage": "https://github.com/Up-Software/diecut-sdk#readme",
+  "bugs": {
+    "url": "https://github.com/Up-Software/diecut-sdk/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "npm run build",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "keywords": [
+    "diecuttemplates",
+    "dielines",
+    "dieline-dimensions-api",
+    "packaging",
+    "sdk"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@vitest/coverage-v8": "^2.1.9",
+    "prettier": "3.10.1",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}
