@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: npm
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # Trusted publishing requires Node >= 22.14.0 and npm >= 11.5.1.
       - uses: actions/setup-node@v7
