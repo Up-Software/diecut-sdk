@@ -1,0 +1,39 @@
+name: Release Please
+
+# Keeps a release pull request up to date with the next version and CHANGELOG.md,
+# computed from the conventional commits merged to main.
+# Merging that pull request creates the tag and the GitHub release, which triggers the
+# Release workflow (release.yml) that publishes to npm.
+#
+# A GitHub App token is used instead of GITHUB_TOKEN because pull requests and releases
+# created with GITHUB_TOKEN do not trigger other workflows: the required CI checks would
+# never run on the release pull request and release.yml would never publish.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-please
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Release Please
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.RELEASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - uses: googleapis/release-please-action@v5
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

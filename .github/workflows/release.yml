@@ -39,12 +39,30 @@ jobs:
             exit 1
           fi
 
-      - run: npm ci
-      - run: npm run build
-      - run: npm test
+      # Re-running a release, or creating the release of a version that was published by hand
+      # (such as 0.1.0), must not fail: npm rejects publishing the same version twice.
+      - name: Check whether this version is already on npm
+        id: published
+        run: |
+          NAME="$(node -p "require('./package.json').name")"
+          VERSION="$(node -p "require('./package.json').version")"
+          if npm view "$NAME@$VERSION" version >/dev/null 2>&1; then
+            echo "::notice::$NAME@$VERSION is already published, skipping"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.published.outputs.exists == 'false'
+        run: npm ci
+      - if: steps.published.outputs.exists == 'false'
+        run: npm run build
+      - if: steps.published.outputs.exists == 'false'
+        run: npm test
 
       # Pre-release versions (for example 0.2.0-beta.1) are published under the "next" dist-tag.
       - name: Publish
+        if: steps.published.outputs.exists == 'false'
         run: |
           if [[ "$GITHUB_REF_NAME" == *-* ]]; then
             npm publish --tag next
