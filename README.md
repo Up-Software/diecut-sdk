@@ -413,7 +413,7 @@ npm test
 npm run test:coverage
 ```
 
-`npm run test:coverage` enforces the coverage thresholds configured in `vitest.config.ts` and writes an `lcov` report to `coverage/`. CI runs the build and the test suite with coverage on Node.js 20, 22 and 24 for every push to `main` and every pull request.
+`npm run test:coverage` enforces the coverage thresholds configured in `vitest.config.mts` and writes an `lcov` report to `coverage/`. CI runs the build and the test suite with coverage on Node.js 20, 22 and 24 for every push to `main` and every pull request.
 
 ### Releasing
 
