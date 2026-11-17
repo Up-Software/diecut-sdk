@@ -76,7 +76,7 @@ describe('ApiHttpClient edge cases', () => {
 
 describe('error mapping', () => {
   it('maps other statuses to the base DiecutApiError', () => {
-    for (const status of [402, 429, 500, 503]) {
+    for (const status of [402, 500, 503]) {
       const error = mapErrorResponse(status, { message: `status ${status}` });
       expect(error).toBeInstanceOf(DiecutApiError);
       expect(error.constructor).toBe(DiecutApiError);

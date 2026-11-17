@@ -17,6 +17,13 @@ export interface DimensionsClientConfig {
   timeoutMs?: number;
   /** `fetch` implementation to inject (useful for tests). Defaults to `globalThis.fetch`. */
   fetchImpl?: typeof fetch;
+  /**
+   * Minimum time in milliseconds between the start of two requests from this client instance
+   * (the API allows 1 request per second). Defaults to `1000`; `0` disables the limiter.
+   */
+  minRequestIntervalMs?: number;
+  /** Maximum retries on `429 Too Many Requests`. Defaults to `2`; `0` disables retries. */
+  maxRetries?: number;
 }
 
 /**
@@ -41,6 +48,8 @@ export class DimensionsClient {
       apiVersionHeader: 'Dimensions-Api-Version',
       timeoutMs: config.timeoutMs,
       fetchImpl: config.fetchImpl,
+      minRequestIntervalMs: config.minRequestIntervalMs,
+      maxRetries: config.maxRetries,
     });
   }
 

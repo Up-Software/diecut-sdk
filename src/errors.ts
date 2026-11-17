@@ -97,6 +97,21 @@ export class DiecutNotFoundError extends DiecutApiError {
 }
 
 /**
+ * Rate limit error (429 Too Many Requests). Thrown when the API keeps answering 429 after the
+ * configured number of retries.
+ */
+export class DiecutRateLimitError extends DiecutApiError {
+  /** Delay requested by the `Retry-After` header of the last response, in milliseconds, if any. */
+  readonly retryAfterMs: number | undefined;
+
+  constructor(status: number, body: unknown, requestId?: string, retryAfterMs?: number) {
+    super(status, body, undefined, requestId);
+    this.name = 'DiecutRateLimitError';
+    this.retryAfterMs = retryAfterMs;
+  }
+}
+
+/**
  * Decides which {@link DiecutApiError} subclass to instantiate based on the HTTP status and the
  * shape of the response body.
  */
@@ -104,6 +119,7 @@ export function mapErrorResponse(
   status: number,
   body: unknown,
   requestId?: string,
+  retryAfterMs?: number,
 ): DiecutApiError {
   if (status === 400) {
     return new DiecutValidationError(status, body, requestId);
@@ -113,6 +129,9 @@ export function mapErrorResponse(
   }
   if (status === 404) {
     return new DiecutNotFoundError(status, body, requestId);
+  }
+  if (status === 429) {
+    return new DiecutRateLimitError(status, body, requestId, retryAfterMs);
   }
   return new DiecutApiError(status, body, undefined, requestId);
 }

@@ -13,6 +13,7 @@ export {
   DiecutValidationError,
   DiecutAuthError,
   DiecutNotFoundError,
+  DiecutRateLimitError,
   mapErrorResponse,
 } from './errors';
 export type { DiecutValidationIssue, DiecutValidationSuggestion } from './errors';

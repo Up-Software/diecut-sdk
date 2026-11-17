@@ -6,7 +6,12 @@ import { mockFetchOnce } from './helpers';
 const API_KEY = 'test-dielines-key';
 
 function makeClient(fetchImpl: typeof fetch) {
-  return new DielinesClient({ apiKey: API_KEY, environment: 'sandbox', fetchImpl });
+  return new DielinesClient({
+    apiKey: API_KEY,
+    environment: 'sandbox',
+    fetchImpl,
+    minRequestIntervalMs: 0,
+  });
 }
 
 describe('DielinesClient', () => {
