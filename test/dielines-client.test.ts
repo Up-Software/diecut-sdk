@@ -230,13 +230,10 @@ describe('DielinesClient', () => {
       format: 'pdf',
       variables: { unit: 'mm', a: 5, b: 10 },
     });
-    await expect(promise).rejects.toBeInstanceOf(DiecutValidationError);
-    try {
-      await promise;
-    } catch (error) {
-      const validationError = error as DiecutValidationError;
-      expect(validationError.errors[0].suggestion?.suggestion?.type).toBe('swap_values');
-    }
+    const error = await promise.catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(DiecutValidationError);
+    const validationError = error as DiecutValidationError;
+    expect(validationError.errors[0].suggestion?.suggestion?.type).toBe('swap_values');
   });
 
   it('listDielines: paginates with page/page_size and maps dieline_list.dielines', async () => {

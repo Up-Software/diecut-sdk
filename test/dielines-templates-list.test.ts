@@ -90,7 +90,7 @@ describe('DielinesClient.listTemplates', () => {
   });
 
   it('without standard_codes leaves standardCodes undefined and without params sends no query', async () => {
-    const { standard_codes, ...sinCodigos } = summary('becf-2');
+    const { standard_codes: _standardCodes, ...sinCodigos } = summary('becf-2');
     const fetchImpl = mockFetchOnce(200, listBody([sinCodigos], 1, 1));
     const page = await makeClient(fetchImpl).listTemplates();
     expect(new URL(fetchImpl.mock.calls[0][0]).search).toBe('');

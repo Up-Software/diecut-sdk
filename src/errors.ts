@@ -10,7 +10,7 @@
 /** Suggested fix included in a validation issue (400). */
 export interface DiecutValidationSuggestion {
   /** Suggestion type: change a value or swap two values. */
-  type?: 'change_value' | 'swap_values' | string;
+  type?: 'change_value' | 'swap_values' | (string & {});
   /** Name of the variable to fix (for `change_value`). */
   name?: string;
   /** Suggested value (for `change_value`). */
