@@ -32,3 +32,26 @@ jobs:
       - run: npm run format:check
       - run: npm run build
       - run: npm run test:coverage
+
+  # The unit tests need Node.js 20 or later (vitest), so the oldest supported runtime is checked
+  # by running the built package against a local HTTP server.
+  runtime-node18:
+    name: Runtime smoke (Node 18.16)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 18.16.1
+
+      - run: node --version
+      - run: npm run test:runtime

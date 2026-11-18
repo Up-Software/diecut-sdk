@@ -411,7 +411,7 @@ Passing `expand: true` without `unit` is a compile-time error. Numeric fields th
 
 ## Requirements
 
-- Node.js 20 or later.
+- Node.js 18.16 or later. Node.js 18 has reached its end of life and is supported only for existing deployments that cannot upgrade yet: support for it will be dropped in a future minor release. On Node.js 18, the first 3D mockup upload prints `ExperimentalWarning: buffer.File`, which comes from Node.js itself and is harmless.
 - No runtime dependencies. The SDK uses the runtime's native `fetch`, `FormData`, `Blob` and `AbortController`.
 
 ## Versioning
@@ -429,7 +429,7 @@ npm test
 npm run test:coverage
 ```
 
-`npm run test:coverage` enforces the coverage thresholds configured in `vitest.config.mts` and writes an `lcov` report to `coverage/`. CI runs the build and the test suite with coverage on Node.js 20, 22 and 24 for every push to `main` and every pull request.
+`npm run test:coverage` enforces the coverage thresholds configured in `vitest.config.mts` and writes an `lcov` report to `coverage/`. CI runs the build and the test suite with coverage on Node.js 20, 22 and 24 for every push to `main` and every pull request. The test runner needs Node.js 20 or later, so Node.js 18 is covered by `npm run test:runtime`, which runs the built package against a local HTTP server (run `npm run build` first).
 
 ### Releasing
 
