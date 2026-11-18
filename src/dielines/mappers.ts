@@ -8,6 +8,7 @@ import {
   mapDielineTemplate,
 } from '../shared/mappers';
 import type {
+  DielineArea,
   Dieline,
   DielineActions,
   DielineListPage,
@@ -66,6 +67,18 @@ export function mapDielineVariables(raw: any): DielineVariables {
 
 type DielineData = Omit<Dieline, keyof DielineActions>;
 
+function mapPartAreas(raw: any): Record<string, DielineArea> | undefined {
+  if (!raw || typeof raw !== 'object') {
+    return undefined;
+  }
+  return Object.fromEntries(
+    Object.entries(raw).map(([part, area]: [string, any]) => [
+      part,
+      { unit: area?.unit, value: toNumber(area?.value) },
+    ]),
+  );
+}
+
 function mapDielineData(raw: any): DielineData {
   const data = raw ?? {};
   return {
@@ -83,7 +96,7 @@ function mapDielineData(raw: any): DielineData {
         }
       : undefined,
     area: data.area ? { unit: data.area.unit, value: toNumber(data.area.value) } : undefined,
-    partAreas: data.part_areas,
+    partAreas: mapPartAreas(data.part_areas),
     substrateParts: Array.isArray(data.substrate_parts)
       ? data.substrate_parts.map((p: any) => ({
           part: p?.part ?? null,

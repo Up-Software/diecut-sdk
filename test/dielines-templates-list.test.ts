@@ -3,7 +3,12 @@ import { DielinesClient } from '../src/dielines/client';
 import { mockFetchOnce, mockFetchSequence } from './helpers';
 
 function makeClient(fetchImpl: typeof fetch) {
-  return new DielinesClient({ apiKey: 'k', environment: 'sandbox', fetchImpl });
+  return new DielinesClient({
+    apiKey: 'k',
+    environment: 'sandbox',
+    fetchImpl,
+    minRequestIntervalMs: 0,
+  });
 }
 
 function summary(id: string) {

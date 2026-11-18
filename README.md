@@ -78,17 +78,19 @@ The examples below assume `dielines` and `dimensions` are clients created this w
 
 `DielinesClient` and `DimensionsClient` accept the same options:
 
-| Option        | Type                        | Default            | Description                                                   |
-| ------------- | --------------------------- | ------------------ | ------------------------------------------------------------- |
-| `apiKey`      | `string`                    | required           | API key, sent as `Authorization: Bearer <apiKey>`.            |
-| `environment` | `'production' \| 'sandbox'` | `'production'`     | Selects the base URL when `baseUrl` is not set.               |
-| `baseUrl`     | `string`                    | from `environment` | Explicit base URL. Takes precedence over `environment`.       |
-| `timeoutMs`   | `number`                    | `30000`            | Per-request timeout in milliseconds.                          |
-| `fetchImpl`   | `typeof fetch`              | `globalThis.fetch` | Custom `fetch` implementation (for example, a mock in tests). |
+| Option                 | Type                        | Default            | Description                                                                  |
+| ---------------------- | --------------------------- | ------------------ | ---------------------------------------------------------------------------- |
+| `apiKey`               | `string`                    | required           | API key, sent as `Authorization: Bearer <apiKey>`.                           |
+| `environment`          | `'production' \| 'sandbox'` | `'production'`     | Selects the base URL when `baseUrl` is not set.                              |
+| `baseUrl`              | `string`                    | from `environment` | Explicit base URL. Takes precedence over `environment`.                      |
+| `timeoutMs`            | `number`                    | `30000`            | Per-request timeout in milliseconds.                                         |
+| `fetchImpl`            | `typeof fetch`              | `globalThis.fetch` | Custom `fetch` implementation (for example, a mock in tests).                |
+| `minRequestIntervalMs` | `number`                    | `1000`             | Minimum time between request starts of one client; `0` disables the limiter. |
+| `maxRetries`           | `number`                    | `2`                | Retries on HTTP 429; `0` disables retries.                                   |
 
 The API version header is set by the SDK (`Dielines-Api-Version: 1.0` or `Dimensions-Api-Version: 1.0`) and cannot be configured.
 
-`DiecutTemplatesSDK` accepts only `dielinesApiKey`, `dimensionsApiKey` and `environment`. Use the clients directly if you need `baseUrl`, `timeoutMs` or `fetchImpl`.
+`DiecutTemplatesSDK` accepts only `dielinesApiKey`, `dimensionsApiKey` and `environment`. Use the clients directly if you need `baseUrl`, `timeoutMs`, `fetchImpl`, `minRequestIntervalMs` or `maxRetries`.
 
 ## Environments
 
@@ -181,6 +183,8 @@ const dieline = await dielines.createDieline('becf-10301', {
 console.log(dieline.url); // downloadable PDF
 console.log(dieline.artworkDimensions); // { unit: 'mm', width: 723.06, height: 502.44 }
 ```
+
+When `area: true` is requested, `dieline.area` holds the total area (`{ unit, value }`). For multi-part dielines, `dieline.partAreas` also breaks it down by part id (for example `{ 'inner-tray': { unit: 'mm2', value: 96574.47 } }`, with numeric values); it is `undefined` otherwise.
 
 Other optional parameters are `pdfHeader` and `dimensionTexts`. To list the dielines already generated from a template:
 
@@ -318,12 +322,13 @@ for (const part of result.parts) {
 
 Every non-2xx response is thrown as a subclass of `DiecutApiError`:
 
-| Class                   | HTTP status              | Extra properties                             |
-| ----------------------- | ------------------------ | -------------------------------------------- |
-| `DiecutValidationError` | 400                      | `errors`: list of `{ message, suggestion? }` |
-| `DiecutAuthError`       | 401, 403                 | none                                         |
-| `DiecutNotFoundError`   | 404                      | none                                         |
-| `DiecutApiError`        | any other non-2xx status | none                                         |
+| Class                   | HTTP status              | Extra properties                                         |
+| ----------------------- | ------------------------ | -------------------------------------------------------- |
+| `DiecutValidationError` | 400                      | `errors`: list of `{ message, suggestion? }`             |
+| `DiecutAuthError`       | 401, 403                 | none                                                     |
+| `DiecutNotFoundError`   | 404                      | none                                                     |
+| `DiecutRateLimitError`  | 429 (after retries)      | `retryAfterMs`: delay requested by `Retry-After`, if any |
+| `DiecutApiError`        | any other non-2xx status | none                                                     |
 
 All of them extend `Error` and carry `status` (HTTP status code), `body` (parsed JSON body, or `{ message: statusText }` if it was not JSON), `message`, and `requestId` (read from the `x-request-id` response header when present).
 
@@ -332,6 +337,7 @@ import {
   DiecutApiError,
   DiecutAuthError,
   DiecutNotFoundError,
+  DiecutRateLimitError,
   DiecutValidationError,
 } from '@up-software/diecut-sdk';
 
@@ -350,6 +356,8 @@ try {
     console.error('Auth error:', error.status, error.message);
   } else if (error instanceof DiecutNotFoundError) {
     console.error('Not found:', error.message);
+  } else if (error instanceof DiecutRateLimitError) {
+    console.error('Rate limited, retry after (ms):', error.retryAfterMs);
   } else if (error instanceof DiecutApiError) {
     console.error('API error:', error.status, error.body, error.requestId);
   } else {
@@ -362,7 +370,15 @@ Client-side argument checks (for example `listTemplates` with an invalid `pageSi
 
 ## Retries and timeouts
 
-The SDK does **not** retry requests. If the API rejects a request (for example with a rate limit response such as 429, which is thrown as a plain `DiecutApiError`) or a network error occurs, your code must decide whether and when to retry.
+The API allows 1 request per second. To stay within that limit, each client instance spaces its requests at least `minRequestIntervalMs` apart (default `1000`, measured between request starts). Concurrent calls are queued, not fired together. Set `minRequestIntervalMs: 0` to disable the limiter.
+
+If the API still answers HTTP 429, the SDK retries up to `maxRetries` times (default `2`; `0` disables retries). It waits for the `Retry-After` header (seconds or HTTP-date) when present and valid, and otherwise uses an exponential backoff starting at 1 second (1 s, 2 s, 4 s, ...). A `Retry-After` longer than 60 seconds is not waited for: the error is thrown right away so your code decides when to try again. Retries go through the rate limiter too. When 429 persists, a `DiecutRateLimitError` is thrown with `retryAfterMs`. Only 429 responses are retried: other statuses and network errors are thrown immediately.
+
+The limiter coordinates requests only within one client instance (one process). If several clients or processes share the same API key, they do not see each other's requests and rely on the 429 retry.
+
+```ts
+const dielines = new DielinesClient({ apiKey, minRequestIntervalMs: 1500, maxRetries: 3 });
+```
 
 Each request has a timeout of 30 seconds by default, configurable with `timeoutMs`. When it is exceeded the request is aborted and a plain `Error` is thrown with a message starting `The diecuttemplates.com API request exceeded the timeout of ...`.
 
@@ -395,7 +411,7 @@ Passing `expand: true` without `unit` is a compile-time error. Numeric fields th
 
 ## Requirements
 
-- Node.js 20 or later.
+- Node.js 18.16 or later. Node.js 18 has reached its end of life and is supported only for existing deployments that cannot upgrade yet: support for it will be dropped in a future minor release. On Node.js 18, the first 3D mockup upload prints `ExperimentalWarning: buffer.File`, which comes from Node.js itself and is harmless.
 - No runtime dependencies. The SDK uses the runtime's native `fetch`, `FormData`, `Blob` and `AbortController`.
 
 ## Versioning
@@ -413,7 +429,7 @@ npm test
 npm run test:coverage
 ```
 
-`npm run test:coverage` enforces the coverage thresholds configured in `vitest.config.mts` and writes an `lcov` report to `coverage/`. CI runs the build and the test suite with coverage on Node.js 20, 22 and 24 for every push to `main` and every pull request.
+`npm run test:coverage` enforces the coverage thresholds configured in `vitest.config.mts` and writes an `lcov` report to `coverage/`. CI runs the build and the test suite with coverage on Node.js 20, 22 and 24 for every push to `main` and every pull request. The test runner needs Node.js 20 or later, so Node.js 18 is covered by `npm run test:runtime`, which runs the built package against a local HTTP server (run `npm run build` first).
 
 ### Releasing
 

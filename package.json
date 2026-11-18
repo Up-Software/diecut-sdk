@@ -19,7 +19,7 @@
     "url": "https://github.com/Up-Software/diecut-sdk/issues"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=18.16"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -28,7 +28,8 @@
     "test:coverage": "vitest run --coverage",
     "prepublishOnly": "npm run build",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "test:runtime": "node scripts/runtime-smoke.cjs"
   },
   "keywords": [
     "diecuttemplates",

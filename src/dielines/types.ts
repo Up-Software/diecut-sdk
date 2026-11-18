@@ -104,8 +104,11 @@ export interface Dieline extends DielineActions {
   url: string;
   artworkDimensions?: DielineArtworkDimensions;
   area?: DielineArea;
-  /** Area breakdown per part, for multi-part dielines. Shape not detailed in the spec. */
-  partAreas?: Record<string, unknown>;
+  /**
+   * Area breakdown per part, keyed by part id. Only present for multi-part dielines when area
+   * calculation was requested.
+   */
+  partAreas?: Record<string, DielineArea>;
   /** Parts of the dieline that accept a substrate for 3D mockups. Empty when the API does not return them. */
   substrateParts: DielineSubstratePart[];
   links: Link[];
