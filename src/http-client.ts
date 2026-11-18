@@ -80,7 +80,7 @@ export class ApiHttpClient {
   private nextRequestAt = 0;
 
   constructor(options: ApiHttpClientOptions) {
-    this.baseUrl = options.baseUrl.replace(/\/+$/, '');
+    this.baseUrl = stripTrailingSlashes(options.baseUrl);
     this.apiKey = options.apiKey;
     this.apiVersionHeader = options.apiVersionHeader;
     this.apiVersion = options.apiVersion ?? '1.0';
@@ -229,4 +229,14 @@ export class ApiHttpClient {
       { get?: (name: string) => string | null } | undefined;
     return headers?.get?.(name) ?? undefined;
   }
+}
+
+/**
+ * Removes the trailing slashes of a URL. A loop instead of `/\/+$/`, which takes quadratic time
+ * on a long run of slashes that is not at the end of the string.
+ */
+function stripTrailingSlashes(url: string): string {
+  let end = url.length;
+  while (end > 0 && url.charCodeAt(end - 1) === 47 /* "/" */) end--;
+  return url.slice(0, end);
 }

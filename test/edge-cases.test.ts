@@ -50,6 +50,26 @@ describe('ApiHttpClient edge cases', () => {
     expect(fetchImpl.mock.calls[0][0]).toBe('https://api.example.com/ping?page=0&flag=false');
   });
 
+  it('strips several trailing slashes from the base URL and keeps inner ones', async () => {
+    const fetchImpl = mockFetchOnce(200, { ok: true });
+    await new ApiHttpClient({
+      baseUrl: 'https://api.example.com/v1///',
+      apiKey: 'k',
+      apiVersionHeader: 'Dielines-Api-Version',
+      fetchImpl,
+      minRequestIntervalMs: 0,
+    }).request({ method: 'GET', path: '/ping' });
+    expect(fetchImpl.mock.calls[0][0]).toBe('https://api.example.com/v1/ping');
+  });
+
+  it('normalizes a base URL with a long run of inner slashes in linear time', () => {
+    // A regular expression such as /\/+$/ takes quadratic time on this input (CodeQL js/polynomial-redos).
+    const baseUrl = `https://api.example.com${'/'.repeat(100_000)}x`;
+    const start = performance.now();
+    new ApiHttpClient({ baseUrl, apiKey: 'k', apiVersionHeader: 'Dielines-Api-Version' });
+    expect(performance.now() - start).toBeLessThan(100);
+  });
+
   it('returns undefined for a 204 even without expectNoContent', async () => {
     const result = await makeHttp(mockFetchOnce(204, undefined)).request({
       method: 'DELETE',
