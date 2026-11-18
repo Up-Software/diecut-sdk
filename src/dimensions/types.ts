@@ -7,7 +7,7 @@ import type { Unit } from '../shared/types';
 
 /** Flat footprint of a part, in the requested unit. */
 export interface PartBoundingBox {
-  unit: Unit | string;
+  unit: Unit | (string & {});
   width: number;
   height: number;
 }

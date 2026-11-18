@@ -91,7 +91,7 @@ export type DielineTemplateVariableDataType =
  */
 export interface DielineTemplateVariableDefaultValue {
   value: number | string | boolean;
-  unit?: Unit | string;
+  unit?: Unit | (string & {});
 }
 
 /** Reference SVG image of a variable or a template. */

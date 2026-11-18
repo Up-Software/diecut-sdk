@@ -178,13 +178,10 @@ describe('DimensionsClient', () => {
     const client = makeClient(fetchImpl);
 
     const promise = client.calculateParts('becf-11a02', { variables: { unit: 'mm' } });
-    await expect(promise).rejects.toBeInstanceOf(DiecutAuthError);
-    try {
-      await promise;
-    } catch (error) {
-      expect((error as DiecutAuthError).message).toBe(
-        'Forbidden. Available Dieline Dimensions API credits count = 0',
-      );
-    }
+    const error = await promise.catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(DiecutAuthError);
+    expect((error as DiecutAuthError).message).toBe(
+      'Forbidden. Available Dieline Dimensions API credits count = 0',
+    );
   });
 });

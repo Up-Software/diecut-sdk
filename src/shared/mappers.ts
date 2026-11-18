@@ -129,7 +129,7 @@ function mapDefaultValue(raw: unknown): DielineTemplateVariableDefaultValue | un
   const obj = raw as Record<string, unknown>;
   const hasUnit = obj.unit !== undefined;
   const value = hasUnit ? toNumber(obj.value) : (obj.value as number | string | boolean);
-  return { value, unit: obj.unit as Unit | string | undefined };
+  return { value, unit: obj.unit as Unit | (string & {}) | undefined };
 }
 
 export function mapDielineTemplateVariable(raw: any): DielineTemplateVariable {

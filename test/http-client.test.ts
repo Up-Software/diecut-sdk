@@ -101,16 +101,13 @@ describe('ApiHttpClient', () => {
     });
 
     const promise = client.request({ method: 'POST', path: '/x', json: {} });
-    await expect(promise).rejects.toBeInstanceOf(DiecutValidationError);
-    try {
-      await promise;
-    } catch (error) {
-      const validationError = error as DiecutValidationError;
-      expect(validationError.status).toBe(400);
-      expect(validationError.errors).toHaveLength(1);
-      expect(validationError.errors[0].message).toBe("Invalid 'unit'.");
-      expect(validationError.message).toBe('Validation failed for one or more variables.');
-    }
+    const error = await promise.catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(DiecutValidationError);
+    const validationError = error as DiecutValidationError;
+    expect(validationError.status).toBe(400);
+    expect(validationError.errors).toHaveLength(1);
+    expect(validationError.errors[0].message).toBe("Invalid 'unit'.");
+    expect(validationError.message).toBe('Validation failed for one or more variables.');
   });
 
   it('throws DiecutAuthError on 401 and 403', async () => {
@@ -159,11 +156,8 @@ describe('ApiHttpClient', () => {
       fetchImpl,
     });
     const promise = client.request({ method: 'GET', path: '/x' });
-    await expect(promise).rejects.toBeInstanceOf(DiecutApiError);
-    try {
-      await promise;
-    } catch (error) {
-      expect((error as DiecutApiError).body).toEqual({ message: 'Internal Server Error' });
-    }
+    const error = await promise.catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(DiecutApiError);
+    expect((error as DiecutApiError).body).toEqual({ message: 'Internal Server Error' });
   });
 });

@@ -30,7 +30,9 @@ jobs:
 
       - run: npm ci
       - run: npm run format:check
+      - run: npm run lint
       - run: npm run build
+      - run: npm run lint:package
       - run: npm run test:coverage
 
   # The unit tests need Node.js 20 or later (vitest), so the oldest supported runtime is checked

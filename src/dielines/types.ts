@@ -46,7 +46,7 @@ export interface DielineVariables {
 
 /** Recommended artwork dimensions for uploading a 3D mockup. Always normalized to `number`. */
 export interface DielineArtworkDimensions {
-  unit: Unit | string;
+  unit: Unit | (string & {});
   width: number;
   height: number;
 }

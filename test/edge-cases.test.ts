@@ -64,13 +64,11 @@ describe('ApiHttpClient edge cases', () => {
       { message: 'nope' },
       { headers: { 'x-request-id': 'req-1' } },
     );
-    try {
-      await makeHttp(fetchImpl).request({ method: 'GET', path: '/x' });
-      expect.unreachable();
-    } catch (error) {
-      expect(error).toBeInstanceOf(DiecutNotFoundError);
-      expect((error as DiecutApiError).requestId).toBe('req-1');
-    }
+    const error = await makeHttp(fetchImpl)
+      .request({ method: 'GET', path: '/x' })
+      .catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(DiecutNotFoundError);
+    expect((error as DiecutApiError).requestId).toBe('req-1');
   });
 });
 
